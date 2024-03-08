@@ -1,0 +1,75 @@
+Program.Sub.ScreenSU.Start
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+'Custom for General Hydroponics
+'Quote 3143
+'Hook on CRM script-3 30620
+
+'Open the Database Connection
+F.ODBC.Connection!Con.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass)
+
+V.Local.sSql.Declare
+V.Local.sCust.Declare
+V.Local.sCustName.Declare
+V.Local.sTitles.Declare
+V.Local.iWidths.Declare
+V.Local.sFormat.Declare
+V.Local.sAlign.Declare
+V.Local.sRet.Declare
+V.Local.sParameters.Declare
+
+F.Intrinsic.Control.If(V.Passed.DATA-MODE,<>,6)
+	F.Intrinsic.Control.If(V.Caller.Hook,=,42900)
+		'Hook CRM Entry- 30600
+		'updated hook 42900 CRM.NET
+		V.Passed.CRM-cmdGAB-2.Set("Open Order")
+	F.Intrinsic.Control.ElseIf(V.Caller.Hook,=,42920)
+		'Hook on Script 3 on CRM
+		'updated script for CRM.nET 42920 TRT
+		V.Local.sCustName.Set(V.Passed.CRM-lblcoName)
+		F.Intrinsic.String.Split(V.Local.sCustName,"(",V.Local.sCustName)
+		V.Local.sCustName.Set(V.Local.sCustName(0))
+		F.Intrinsic.String.Replace(V.Local.sCustName(1),")","",V.Local.sCust)
+		F.Intrinsic.String.Split("Order #*!*Purchase Order*!*Address1*!*City*!*State*!*Zip","*!*",V.Local.sTitles)
+		F.Intrinsic.String.Split("1000*!*2500*!*3000*!*1500*!*500*!*1000","*!*",V.Local.iWidths)
+		F.Intrinsic.String.Split("*!**!**!**!**!*","*!*",V.Local.sFormat)
+		F.Intrinsic.String.Split("0*!*0*!*0*!*0*!*0*!*0","*!*",V.Local.sAlign)
+		
+		V.Local.sSql.Set("Select T1.ORDER_NO, T1.CUSTOMER_PO,")
+		F.Intrinsic.String.Concat(V.Local.sSql," T2.ADDRESS_1_SHIP, T2.CITY_SHIP, T2.STATE_SHIP, T2.CODE_ZIP_SHIP",V.Local.sSql)
+		F.Intrinsic.String.Concat(V.Local.sSql," From V_ORDER_HEADER T1",V.Local.sSql)
+		F.Intrinsic.String.Concat(V.Local.sSql," Left Outer Join V_ORDER_SHIP_TO T2",V.Local.sSql)
+		F.Intrinsic.String.Concat(V.Local.sSql," on T2.ORDER_NO = T1.ORDER_NO",V.Local.sSql)
+		F.Intrinsic.String.Concat(V.Local.sSql," and T2.ORDER_SHIP_ID = T1.SHIP_ID",V.Local.sSql)
+		F.Intrinsic.String.Concat(V.Local.sSql," Where T1.CUSTOMER = '",V.Local.sCust,"'",V.Local.sSql)
+		F.Intrinsic.String.Concat(V.Local.sSql," and T1.ORDER_SHIP_ID = '' and T2.ORDER_SHIP_ID = ''",V.Local.sSql)
+		F.Intrinsic.String.Concat(V.Local.sSql," Order By T1.ORDER_NO",V.Local.sSql)
+		
+		F.Intrinsic.UI.Browser(V.Local.sCustName,"Con",V.Local.sSql,V.Local.sTitles,V.Local.iWidths,10700,5000,V.Local.sFormat,V.Local.sAlign,V.Local.sRet)
+
+		'If an order number is selected
+		F.Intrinsic.Control.If(V.Local.sRet,<>,"***CANCEL***")
+			F.Intrinsic.String.Split(V.Local.sRet,"*!*",V.Local.sRet)
+			F.Intrinsic.String.Concat(V.Local.sRet(0),"!*!O!*!",V.Local.sCust,V.Local.sParameters)
+			F.Global.General.CallWrapperSync(200000,V.Local.sParameters)
+		F.Intrinsic.Control.EndIf
+
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.EndIf
+'F.Intrinsic.UI.Msgbox(V.Local.sTitle)
+
+Program.Sub.Main.End
+
+Program.Sub.Comments.Start
+${$0$}$ATG_CRMOpenOrders$}$CHANDANA$}$2/7/2012
+${$1$}$$}$$}$1$}$42920$}$CRM.NET-GAB3$}$4/12/2016 1:03:46 PM$}$(Program: Global_Shop_CRM.exe; Screen: )
+
+${$1$}$$}$$}$0$}$42900$}$CRM.NET-ENTRY$}$4/12/2016 1:03:29 PM$}$(Program: Global_Shop_CRM.exe; Screen: )
+
+Program.Sub.Comments.End
+
